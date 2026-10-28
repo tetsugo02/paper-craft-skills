@@ -73,11 +73,12 @@ Paper Deck 的 V1 是 **raster-first AIGC slide image** 工作流。除非用户
 
 默认必须确认，不要直接生成图片。除非用户明确说“直接生成/不用确认/按默认来”。
 
-询问时控制在 3 个问题以内：
+询问时控制在 4 个问题以内：
 
 1. 页数和用途：组会 / 答辩 / 公开分享 / 商业汇报，需要几页？
 2. 风格：见 `references/style-system.md`。
-3. 是否插入真实素材：是否允许从 PDF/论文图表中截图，或由用户提供截图/图片？如果允许，说明预计第几页使用哪些真实素材。
+3. （可选）是否也输出到 Notion（会把每页图片+讲稿整理成一个 Notion 页面）？
+4. 是否插入真实素材：是否允许从 PDF/论文图表中截图，或由用户提供截图/图片？如果允许，说明预计第几页使用哪些真实素材。
 
 推荐话术：
 
@@ -191,6 +192,13 @@ python3 <SKILL_ROOT>/scripts/merge_deck.py paper-deck/{topic-slug}
 ```
 
 脚本会读取 `images/NN-*.png|jpg|webp`，输出同名 `.pptx` 和 `.pdf`。每张图片铺满一页 16:9。
+
+### Step 7.5（可选）：Notion 出力
+
+用户要求 Notion（`--output notion` / 「Notionにも」）时：
+1. 生成 `deck-notion.md`：`# 标题` → deck brief 摘要（callout）→ 每页 `## NN. Slide Title` + `![](images/NN-xxx.png)` + 该页要点/讲稿（来自 outline）
+2. 按 `../notion-publish/SKILL.md` 发布（MCP 优先，否则 `notion_publish.py`；本地图片需要上传）
+3. `.pptx` / `.pdf` 不上传，除非用户要求；把 Notion URL 告诉用户
 
 ### Step 8: 质量检查
 

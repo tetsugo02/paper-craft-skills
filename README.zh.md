@@ -14,22 +14,41 @@
 
 ---
 
-## 怎么安装
+## 安装
 
-**把这段话复制到 Codex 或 Claude Code 里：**
+> 本仓库 fork 自 [zsyggg/paper-craft-skills](https://github.com/zsyggg/paper-craft-skills)，新增 Notion 输出、源代码 / 实装途中设计 / agent 讨论记录的可视化，以及 Codex 支持。
+
+**方式 A：让 agent 安装（Claude Code / Codex）**
 
 ```
-请帮我安装 zsyggg/paper-craft-skills
-GitHub：https://github.com/zsyggg/paper-craft-skills
+Please install tetsugo02/paper-craft-skills for me.
+GitHub: https://github.com/tetsugo02/paper-craft-skills
+Follow the "How to install" section of the README (clone, then run ./install.sh).
 ```
 
-AI agent 会自动克隆、配置、注册 skill。**不需要 API key，不需要注册账号。** 如果想用终端：
+**方式 B：clone + 安装脚本（多台机器推荐）**
 
 ```bash
-npx skills add zsyggg/paper-craft-skills
+git clone https://github.com/tetsugo02/paper-craft-skills.git ~/workspace/paper-craft-skills
+cd ~/workspace/paper-craft-skills
+./install.sh            # Claude Code (~/.claude/skills) + Codex (~/.agents/skills)
+./install.sh --claude   # 仅 Claude Code
+./install.sh --codex    # 仅 Codex
 ```
 
-**支持：** Codex · Claude Code · Cursor · Windsurf
+**方式 C：插件市场**
+
+```bash
+# Claude Code
+/plugin marketplace add tetsugo02/paper-craft-skills
+/plugin install paper-craft-skills@paper-craft-skills
+# Codex
+codex plugin marketplace add tetsugo02/paper-craft-skills
+```
+
+或：`npx skills add tetsugo02/paper-craft-skills`
+
+**Notion 输出（可选）**：`claude mcp add --transport http notion https://mcp.notion.com/mcp`（Claude Code）/ `codex mcp add notion --url https://mcp.notion.com/mcp && codex mcp login notion`（Codex），或设置 `NOTION_TOKEN`。详见 [`skills/notion-publish`](./skills/notion-publish/SKILL.md)。
 
 ---
 

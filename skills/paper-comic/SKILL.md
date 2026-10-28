@@ -4,11 +4,26 @@ description: |
   论文方法图解——用视觉图解彻底讲清楚一篇论文到底做了什么、怎么做的。
   自动分析论文核心方法，先推荐封面/概述图/机制细节图的生成方案，必须由用户确认范围、张数、语言、风格后再生成。
   支持温暖笔记风和论文框架图风。
+  除论文外，也能从源代码（code）、实装途中的方法（文章＋代码，design）、与 agent 的讨论记录（discussion）用同样风格可视化，
+  并用 ✅🟡⬜❓ 视觉语言区分已实装/部分实装/计划/未决。输出 Markdown，可选发布到 Notion。
+  論文・ソースコード・実装途中の設計メモ・エージェントとの議論ログから手法の構成図／機構図を作る．
 ---
 
 # Paper Method Illustrated — 论文方法图解
 
 把论文的核心方法用视觉图解彻底讲清楚。
+
+**输入不限于论文**（详见 `references/source-modes.md`）：
+
+| mode | 输入 | 典型用途 |
+|------|------|---------|
+| `paper` | arXiv / PDF / 论文文本 | 读论文、做分享（原有功能） |
+| `code` | 仓库路径 / GitHub URL / 若干源文件 | 把代码实现的方法画成同风格的架构图、数据流图、核心模块图 |
+| `design` | 研究计划/设计笔记 ＋ 实装中的代码 | **实装途中的方法**：画出现在的构成，以及哪些已实装/部分实装/计划中/未决 |
+| `discussion` | 与 Claude Code / Codex 讨论的结果（当前会话、粘贴的记录、`.jsonl` 日志） | 把讨论中达成共识的方法结构可视化，决策与被否决的方案一并整理 |
+
+所有模式都先整理成中间表示 `method-spec.md`（`references/method-spec.md`），再从它设计图。
+`design` / `discussion` 模式是研究推进中反复使用的核心功能：spec 有版本，更新时只重画受影响的图。
 
 ## 与其他技能的本质区别
 
@@ -26,7 +41,29 @@ description: |
 /paper-comic https://arxiv.org/abs/2512.xxxxx
 /paper-comic /path/to/paper.pdf --style sketchnote
 /paper-comic /path/to/paper.pdf --style paper-figure --language English --pages 1
+
+# 源代码 → 同风格方法图
+/paper-comic ./my-repo --source code
+/paper-comic https://github.com/org/repo --source code --style paper-figure
+
+# 实装途中的方法（文章＋代码）
+/paper-comic docs/plan.md src/ --source design
+/paper-comic docs/plan.md src/ --source design --draft          # 先只出 method-spec + Mermaid 草图（不生图）
+
+# 与 agent 的讨论结果
+/paper-comic --source discussion                                 # 用当前会话中的讨论
+/paper-comic --source discussion --transcript latest             # 读取本项目最近一次 Claude Code / Codex 会话
+/paper-comic discussion.md src/ --source design --output notion  # 讨论记录＋代码，发布到 Notion
 ```
+
+**参数**（都可省略，省略时自动判断或在确认时询问）：
+- `--source paper|code|design|discussion`：输入模式（默认自动判定）
+- `--draft`：只生成 `method-spec.md` 和 Mermaid 草图，不调用生图（快速对齐结构用）
+- `--output md|notion`：输出到本地 Markdown（默认）或另外发布到 Notion（见 `../notion-publish/SKILL.md`）
+- `--update`：基于上一次的 `method-spec.md` 更新（只重画变化的图）
+- `--transcript latest|<path.jsonl>`：discussion 模式读取过去的会话日志（`scripts/extract_transcript.py`）
+
+> Codex 中用 `$paper-comic ...` 调用（或直接用自然语言描述，如“把刚才讨论的设计画成图”）。
 
 ---
 
@@ -80,11 +117,14 @@ description: |
 
 确认时必须覆盖：
 
-1. **图片语言**：中文 / English / 双语
+0. **（design / discussion 模式）method-spec 摘要**：先给出整理后的构成要素、状态（✅🟡⬜❓）、决策、未决事项，请用户确认“理解是否正确”。可以和下面各项放在同一条消息里
+1. **图片语言**：中文 / English / 日本語 / 双语
 2. **生成范围**：只要封面图、只要方法总览图，还是概述图 + 若干机制细节图 + 结果图
 3. **推荐张数**：基于论文复杂度给出建议，并说明为什么，如“我建议6张，因为这篇论文有整体架构、两个核心attention机制、编码器/解码器结构和关键实验结果”
 4. **视觉风格**：`sketchnote` 或 `paper-figure`
-5. **用途**：README/文章封面/小红书/演示文稿/论文阅读笔记（用途决定横竖比例和文字密度）
+5. **用途**：README/文章封面/小红书/演示文稿/论文阅读笔记/研究室内设计共享（用途决定横竖比例和文字密度）
+6. **出图方式**：`draft`（只出 Mermaid 草图，秒级、可反复改）还是 `final`（调用生图）。design / discussion 模式建议先 draft 对齐结构，再 final
+7. **输出位置**：本地 Markdown，还是也发布到 Notion（需要父页面 URL；不指定则按 notion-publish 规则创建 private 页面）
 
 确认话术示例：
 
@@ -131,7 +171,22 @@ description: |
 
 ## 工作流程
 
-### Step 1：分析论文 → 提取"可图解内容"
+### Step 1：读取输入 → 写 method-spec → 提取"可图解内容"
+
+先判定 source mode，然后按 `references/source-modes.md` 对应章节读取：
+
+| mode | 读取要点 |
+|------|---------|
+| `paper` | 读全文（同下） |
+| `code` | 运行 `scripts/code_map.py <repo>` 得到代码地图 → 找入口 → 追踪一次 forward/推理/训练 step 的形状变化 → 找出与 baseline 不同的核心部分 |
+| `design` | 从文章抽取构成与意图，从代码判定每个要素的实装状态（✅🟡⬜❓），记录文章与代码的矛盾 |
+| `discussion` | 取得讨论记录（当前会话 / 粘贴 / `scripts/extract_transcript.py`）→ 给发言编号 → 抽取共识构成、决策、被否决方案、未决事项；**后面的发言覆盖前面的**；未被用户明确接受的提案记为 ❓ |
+
+然后把结果写成 `comic/<slug>/method-spec.md`（格式见 `references/method-spec.md`）。每个要素必须带 status 和 evidence（论文章节 / `file:line` / 讨论轮次 `T12`）。没有依据的要素不画。
+
+若已存在上一版 `method-spec.md`（`--update` 或同一 slug），先把旧版移到 `spec-history/vN.md`，再写新版并列出差异。
+
+以下以论文为例说明“只保留需要图解的部分”；code / design / discussion 模式的推荐图见 `references/source-modes.md` 各节的表格。
 
 读完论文后，列出论文的所有内容点，然后**只保留需要图解的部分**：
 
@@ -221,7 +276,11 @@ description: |
 
 ### Step 5：生成图片
 
-根据当前运行环境自动选择生图后端。为每一页创建prompt文件 → 用结构化prompt生成。
+**draft 模式**（`--draft` 或用户选择 draft）：不调用生图。只输出 `method-spec.md` 中的 Mermaid 草图（可按图拆成多个 Mermaid 块），用 `classDef` 区分状态。明确告诉用户这是草图，不是最终图。用户确认结构后再进入 final。
+
+**final 模式**：根据当前运行环境自动选择生图后端。为每一页创建prompt文件（`comic/<slug>/prompts/NN-*.md`）→ 用结构化prompt生成。
+
+design / discussion / code 模式的图必须遵循 `references/status-visuals.md` 的状态视觉语言（✅ 实线 / 🟡 WIP / ⬜ 虚线 / ❓ 便签或分支 / ✕ 被否决方案放在侧边小面板），并带一行小图例和版本号。
 
 **结构化prompt格式**（参考但不照抄baoyu）：
 ```
@@ -238,6 +297,13 @@ description: |
 1. Input: x ∈ R^(n×d)
 2. Q = xW_Q ... (完整标注)
 ...
+
+【状态标记】（仅 code / design / discussion 模式）
+- M1 Patch Encoder：✅ 实线
+- M2 Sparse Router：🟡 WIP 标签
+- M3 Consistency Loss：⬜ 虚线框
+- τ schedule：❓ 便签“linear? / cosine?”
+- 右下角图例：✅ done 🟡 WIP ⬜ planned ❓ open · design v3
 
 【颜色限制】
 - 背景：明亮浅米白，不要泛黄旧纸
@@ -256,7 +322,28 @@ description: |
 
 ### Step 6：输出
 
-生成 `[topic]-illustrated.md`：
+输出目录统一为 `comic/<slug>/`：
+
+```text
+comic/<slug>/
+├── method-spec.md          # 正本（所有模式）
+├── spec-history/v1.md ...  # 旧版本（design / discussion 反复更新时）
+├── code-map.md             # code / design 模式
+├── discussion.md           # discussion 模式（抽取的讨论记录）
+├── prompts/NN-*.md         # final 模式的每页 prompt
+├── NN-*.png                # 生成的图
+└── <slug>-illustrated.md   # 汇总页（下方格式）
+```
+
+code / design / discussion 模式的汇总页在“讲解”后追加：
+- **对应关系**：图中每个模块 → `file:line` / 讨论轮次 / 笔记章节
+- **决策与未决**：来自 method-spec 的 Decisions / Open questions / Next actions
+- **本版变化**：与上一版 spec 的差异（若有）
+- draft 模式下，图片位置放 Mermaid 代码块
+
+**Notion 输出**（`--output notion` 或用户要求）：按 `../notion-publish/SKILL.md` 发布 `<slug>-illustrated.md`。Mermaid 草图在 Notion 中直接渲染为图；本地 PNG 需要上传（MCP 有上传工具则用，否则用 `notion_publish.py`）。已存在 `<slug>-illustrated.notion.json` 时默认更新同一页面，这样设计图在 Notion 上始终是最新版。
+
+论文模式的汇总页格式（`[topic]-illustrated.md`）：
 
 ```markdown
 # [论文标题] — 图解
@@ -286,6 +373,13 @@ description: |
 3. [要点3]
 ```
 
+### Step 7：随研究推进更新（design / discussion）
+
+1. 用户说“设计变了 / 又讨论了一轮 / 代码更新了”→ 重新读取新增的输入（只读新讨论轮次 `--since`、`git diff`、更新的笔记）
+2. 旧 spec 移到 `spec-history/`，写新 spec，列出 Changes since previous version
+3. 只重新生成受影响的图（构成变化 → 概览图；某机制变化 → 该机制图；状态变化 → 只改状态标记的图）。不受影响的图保留
+4. 先给用户看差异和计划重画的图，确认后再生成；Notion 页面用同一页更新
+
 ---
 
 ## 质量标准
@@ -296,6 +390,8 @@ description: |
 - ✅ 流程箭头清晰，有明确的"从这里到那里"
 - ✅ 关键部分用颜色/大小做了视觉强调
 - ✅ 不看论文原文也能理解
+- ✅ （code / design / discussion）每个模块都能追溯到 `file:line` / 讨论轮次；状态标记和图例一致
+- ✅ （discussion）画的是最终共识，不是被推翻的中间方案
 
 ### 差的图解
 - ❌ 信息堆砌，什么都想画进去
@@ -303,6 +399,8 @@ description: |
 - ❌ 流程不清晰，不知道先看哪后看哪
 - ❌ 画了但没解释——放了一张架构图但没标注关键点
 - ❌ 和论文Figure 1一模一样——那你画的有什么意义
+- ❌ （code）画成文件目录树或 UML 类图——要画“方法”，不是“代码结构”
+- ❌ （design）把计划中的部分画得和已实装一样，读者误以为已经能跑
 
 ---
 
@@ -311,3 +409,9 @@ description: |
 - `references/base-prompt.md` — 图解生成基础规范（结构、文字、色彩要求）
 - `references/styles/sketchnote.md` — 温暖科研笔记风
 - `references/styles/paper-figure.md` — 论文框架图风
+- `references/source-modes.md` — paper / code / design / discussion 各模式的读取方法与推荐图
+- `references/method-spec.md` — 中间表示 method-spec 的模板
+- `references/status-visuals.md` — 已实装/部分/计划/未决/否决 的视觉语言
+- `scripts/code_map.py` — 代码地图（定义、依赖、入口、TODO/stub）
+- `scripts/extract_transcript.py` — 从 Claude Code / Codex 会话日志抽取讨论
+- `../notion-publish/SKILL.md` — Notion 发布

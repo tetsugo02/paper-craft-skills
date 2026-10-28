@@ -1,0 +1,6 @@
+interface:
+  display_name: "Paper Comic"
+  short_description: "Method figures from papers, source code, WIP designs, or agent discussions"
+  default_prompt: "Visualize the method we just discussed as figures"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "paper-craft-skills",
+  "version": "1.1.0",
+  "description": "Turn papers, source code, work-in-progress designs and agent discussions into method figures, in-depth articles (HTML/Notion) and visual slide decks.",
+  "author": { "name": "tetsugo02" },
+  "homepage": "https://github.com/tetsugo02/paper-craft-skills",
+  "repository": "https://github.com/tetsugo02/paper-craft-skills",
+  "license": "MIT",
+  "keywords": ["paper", "research", "figure", "notion", "slides"]
+}
