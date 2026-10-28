@@ -1,0 +1,13 @@
+{
+  "name": "paper-craft-skills",
+  "owner": { "name": "tetsugo02" },
+  "metadata": { "description": "paper-craft-skills (tetsugo02 fork)" },
+  "plugins": [
+    {
+      "name": "paper-craft-skills",
+      "source": "./",
+      "description": "Turn papers, source code, work-in-progress designs and agent discussions into method figures, in-depth articles (HTML/Notion) and visual slide decks.",
+      "version": "1.1.0"
+    }
+  ]
+}

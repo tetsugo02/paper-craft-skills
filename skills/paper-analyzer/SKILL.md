@@ -2,7 +2,8 @@
 name: paper-analyzer
 description: |
   将学术论文转化为深度HTML长文。6轮强制工作流、代码仓库搜索、公式渲染、Mermaid图表。
-  3种写作风格，输出可直接分享的精美HTML页面。
+  3种写作风格，输出可直接分享的精美HTML页面，或发布为 Notion 页面（--output notion|both）。
+  論文の深掘り解説記事を HTML / Notion ページで出力する．
 ---
 
 # Paper Analyzer — 学术论文深度解析
@@ -15,7 +16,13 @@ description: |
 /paper-analyzer https://arxiv.org/abs/2605.07363
 /paper-analyzer /path/to/paper.pdf
 /paper-analyzer  粘贴文本
+/paper-analyzer https://arxiv.org/abs/2605.07363 --output notion            # Notion ページに出力
+/paper-analyzer /path/to/paper.pdf --output both --notion-parent <page-url>  # HTML + Notion
 ```
+
+**出力先（`--output`）**：`html`（既定）/ `notion` / `both`．
+Notion 出力は同じリポジトリの `notion-publish` スキル（`../notion-publish/SKILL.md`）の手順に従う．
+Codex では `$paper-analyzer ...` で呼び出す．
 
 ---
 
@@ -58,13 +65,33 @@ description: |
 
 必须问风格选择，用户未回则默认 academic。
 
-### Round 5：写作输出HTML ⛔
+同时确认**出力先**（用户已通过 `--output` 指定则跳过）：
+- `html`：单文件 HTML（默认）
+- `notion`：Notion 页面（问一次父页面 URL；未回答则按 notion-publish 的规则创建 private 页面）
+- `both`：两者都要
 
-按选定风格的要求写，输出完整HTML。模板见下文。
+### Round 5：写作输出 ⛔
+
+按选定风格的要求写。
+
+- **始终先写 `article.md`**（正本，所有输出都从它生成）：
+  - 公式用 `$...$` / `$$...$$`，图表用 ```` ```mermaid ```` 代码块，代码段用带语言名的代码块
+  - 不要用 HTML 标签；摘要盒写成 `> [!NOTE] ...`，金句写成 `> [!TIP] ...`
+  - 论文图片若需引用，用 `![Figure N](figs/figN.png)` 或原始 https 链接
+- `html` / `both`：把 `article.md` 套进下文 HTML 模板，输出完整 HTML（摘要盒→`.summary-box`，金句→`.golden`，mermaid→`<pre class="mermaid">`）
+- `notion` / `both`：进入 Round 7
 
 ### Round 6：自我审查 ⛔
 
 逐项检查，不通过则修改直到通过。
+
+### Round 7：Notion 发布（仅 `notion` / `both`）
+
+按 `notion-publish` 技能发布 `article.md`：
+1. Notion MCP 可用 → 用 MCP 创建/更新页面；否则用 `../notion-publish/scripts/notion_publish.py`（需要 `NOTION_TOKEN`）
+2. 页面标题 = 论文标题 + “ — 深度解读”（或用户语言的对应说法）
+3. 已存在 `article.notion.json` → 默认更新同一页面
+4. 把 Notion URL 告诉用户
 
 ---
 
@@ -311,7 +338,8 @@ th{background:#f9fafb;font-weight:600}
 - [ ] 代码状态已提及？
 - [ ] 有代码则源码 ≥ 2 段 + 文件路径？
 - [ ] 指出局限 ≥ 2 处（至少 1 处是作者自述的）？
-- [ ] HTML 格式完整，可在浏览器打开？
+- [ ] HTML 格式完整，可在浏览器打开？（html / both）
+- [ ] Notion 页面中公式、Mermaid、表格正常显示，URL 已告知用户？（notion / both）
 - [ ] 无 AI 套话（"深入探讨""至关重要""值得注意的是"）？
 
 ### storytelling 专属
@@ -345,3 +373,4 @@ th{background:#f9fafb;font-weight:600}
 - `styles/with-formulas.md` — 公式详解
 - `styles/with-code.md` — 代码分析规范
 - `scripts/generate_html.py` — HTML生成辅助脚本
+- `../notion-publish/SKILL.md` — Notion 发布（MCP / API 脚本）

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Paper Deck"
+  short_description: "Turn a paper into a designed AIGC slide deck (PPTX/PDF, optional Notion)"
+  default_prompt: "Make a slide deck from this paper"
+policy:
+  allow_implicit_invocation: true

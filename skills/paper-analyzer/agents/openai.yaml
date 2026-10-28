@@ -1,0 +1,6 @@
+interface:
+  display_name: "Paper Analyzer"
+  short_description: "Turn a paper into an in-depth article (HTML or Notion page)"
+  default_prompt: "Analyze this paper and write an in-depth article"
+policy:
+  allow_implicit_invocation: true

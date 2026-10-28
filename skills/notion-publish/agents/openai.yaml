@@ -1,0 +1,13 @@
+interface:
+  display_name: "Notion Publish"
+  short_description: "Publish Markdown outputs (articles, figures, decks) to Notion pages"
+  default_prompt: "Publish this Markdown file to Notion"
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "notion"
+      description: "Notion MCP server (optional; falls back to NOTION_TOKEN + bundled script)"
+      transport: "streamable_http"
+      url: "https://mcp.notion.com/mcp"
